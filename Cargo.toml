@@ -1,0 +1,13 @@
+[package]
+name = "rustos"
+version = "0.1.0"
+authors = ["Keith Noguchi <keith.noguchi@gmail.com>"]
+
+[dependencies]
+bootloader = "0"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

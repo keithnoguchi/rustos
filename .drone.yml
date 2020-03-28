@@ -1,0 +1,45 @@
+kind: pipeline
+type: docker
+name: default
+steps:
+  - name: format
+    image: archlinux/base
+    commands:
+      - pacman -Sy --noconfirm make gcc pkgconf rustup flatbuffers wabt
+      - rustup update nightly
+      - rustup default nightly
+      - rustup component add rustfmt
+      - make fmt
+  - name: lint
+    image: archlinux/base
+    commands:
+      - pacman -Sy --noconfirm make gcc pkgconf rustup flatbuffers protobuf wabt grep
+      - rustup update nightly
+      - rustup default nightly
+      - rustup component add clippy
+      - make lint
+  - name: build
+    image: archlinux/base
+    commands:
+      - pacman -Sy --noconfirm make gcc pkgconf rustup flatbuffers protobuf wabt grep
+      - rustup update nightly
+      - rustup default nightly
+      - cargo install cargo-xbuild
+      - rustup component add rust-src
+      - make
+    depends_on:
+      - format
+      - lint
+  - name: image
+    image: archlinux/base
+    commands:
+      - pacman -Sy --noconfirm make gcc pkgconf rustup flatbuffers protobuf wabt grep
+      - rustup update nightly
+      - rustup default nightly
+      - cargo install cargo-xbuild
+      - cargo install bootimage
+      - rustup component add rust-src
+      - rustup component add llvm-tools-preview
+      - make image
+    depends_on:
+      - build
