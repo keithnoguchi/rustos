@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: GPL-2.0
-TARGETS	:= post01
-TARGETS	+= post02
+TARGETS	:= post01 # A Freestanding Rust Binary
+TARGETS	+= post02 # A Minimal Rust Kernel
+TARGETS	+= post03 # VGA Text Mode
 
-.PHONY: init fmt lint image run
-all: fmt lint $(TARGETS) main image
+.PHONY: init update fmt lint test image run
+all: fmt lint $(TARGETS) image
 main:
 	@cargo xbuild --target x86_64-os.json
 $(TARGETS):
@@ -15,13 +16,15 @@ init:
 	@cargo install bootimage
 	@rustup component add rust-src
 	@rustup component add llvm-tools-preview
+update: init
+	@cargo update
 fmt:
 	@rustfmt --edition 2018 --check **/*.rs
 lint:
 	@cargo clippy -- -D warnings
-image:
+image: main
 	@cargo bootimage --target x86_64-os.json
-run:
+run: image
 	@cargo xrun --target x86_64-os.json
 run-%:
 	@cargo xrun --target x86_64-os.json --example $*

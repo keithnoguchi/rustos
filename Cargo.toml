@@ -5,6 +5,9 @@ authors = ["Keith Noguchi <keith.noguchi@gmail.com>"]
 
 [dependencies]
 bootloader = "0"
+lazy_static = {version = "1", features = ["spin_no_std"]}
+spin = "0"
+volatile = "0.2"
 
 [profile.dev]
 panic = "abort"
