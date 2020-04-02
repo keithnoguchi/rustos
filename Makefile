@@ -23,3 +23,5 @@ image:
 	@cargo bootimage --target x86_64-os.json
 run:
 	@cargo xrun --target x86_64-os.json
+run-%:
+	@cargo xrun --target x86_64-os.json --example $*
