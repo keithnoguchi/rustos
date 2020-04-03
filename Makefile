@@ -2,9 +2,10 @@
 TARGETS	:= post01 # A Freestanding Rust Binary
 TARGETS	+= post02 # A Minimal Rust Kernel
 TARGETS	+= post03 # VGA Text Mode
+TARGETS	+= post04 # Testing!
 
-.PHONY: init update fmt lint test image run
-all: fmt lint $(TARGETS) image
+.PHONY: init update fmt lint image test run clean
+all: fmt lint $(TARGETS) image test
 main:
 	@cargo xbuild --target x86_64-os.json
 $(TARGETS):
@@ -22,9 +23,13 @@ fmt:
 	@rustfmt --edition 2018 --check **/*.rs
 lint:
 	@cargo clippy -- -D warnings
-image: main
+image:
 	@cargo bootimage --target x86_64-os.json
-run: image
+test:
+	@cargo xtest --target x86_64-os.json
+run:
 	@cargo xrun --target x86_64-os.json
 run-%:
 	@cargo xrun --target x86_64-os.json --example $*
+clean:
+	@cargo clean

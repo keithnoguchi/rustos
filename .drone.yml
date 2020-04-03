@@ -43,3 +43,16 @@ steps:
       - cargo bootimage --target x86_64-os.json
     depends_on:
       - build
+  - name: test
+    image: archlinux/base
+    commands:
+      - pacman -Sy --noconfirm make gcc pkgconf rustup flatbuffers protobuf wabt grep qemu-headless
+      - rustup update nightly
+      - rustup default nightly
+      - cargo install cargo-xbuild
+      - cargo install bootimage
+      - rustup component add rust-src
+      - rustup component add llvm-tools-preview
+      - cargo xtest --target x86_64-os.json
+    depends_on:
+      - build
