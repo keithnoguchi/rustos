@@ -2,13 +2,15 @@
 
 [![drone]](https://cloud.drone.io/keithnoguchi/rustos)
 
-Philipp Oppermann's [Writing an OS in Rust]
+Philipp Oppermann's *awesome* [Writing an OS in Rust]
 
 - Bare bones
   - [A Freestanding Rust Binary] : [post01.rs]
   - [A Minimal Rust Kernel] : [post02.rs]
   - [VGA Text Mode] : [post03.rs]
   - [Testing] : [post04.rs]
+    - [tests/basic_boot.rs]
+    - [tests/should_panic.rs]
 
 Happy Hackin'!
 
@@ -22,3 +24,5 @@ Happy Hackin'!
 [post02.rs]: examples/post02.rs
 [post03.rs]: examples/post03.rs
 [post04.rs]: examples/post04.rs
+[tests/basic_boot.rs]: tests/basic_boot.rs
+[tests/should_panic.rs]: tests/should_panic.rs
