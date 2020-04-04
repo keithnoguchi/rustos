@@ -138,13 +138,13 @@ mod tests {
     use crate::{println, serial_print, serial_println};
     #[test_case]
     fn println() {
-        serial_print!("println... ");
+        serial_print!("vga::println... ");
         println!("here is the output from println");
         serial_println!("[ok]");
     }
     #[test_case]
     fn println_many() {
-        serial_print!("println_main... ");
+        serial_print!("vga::println_main... ");
         for _ in 0..200 {
             println!("let's println a lot");
         }
@@ -153,7 +153,7 @@ mod tests {
     #[test_case]
     fn println_output() {
         use super::*;
-        serial_print!("println_output... ");
+        serial_print!("vga::println_output... ");
         let s = "Some test string that fits on a single line";
         println!("{}", s);
         for (i, c) in s.chars().enumerate() {

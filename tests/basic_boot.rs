@@ -23,7 +23,7 @@ fn panic(info: &PanicInfo) -> ! {
 
 #[test_case]
 fn test_println() {
-    serial_print!("basic_boot::test_println... ");
+    serial_print!("tests::basic_boot::test_println... ");
     println!("test_println output");
     serial_println!("[ok]");
 }

@@ -6,6 +6,7 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test_runner)]
 #![reexport_test_harness_main = "test_main"]
+#![feature(abi_x86_interrupt)]
 extern crate lazy_static;
 extern crate spin;
 extern crate x86_64;
@@ -29,6 +30,13 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
     }
 }
 
+#[cfg(test)]
+#[no_mangle]
+pub extern "C" fn _start() -> ! {
+    test_main();
+    loop {}
+}
+
 pub fn test_runner(tests: &[&dyn Fn()]) {
     serial_println!("Running {} tests", tests.len());
     for test in tests {
@@ -41,13 +49,6 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
     serial_println!("[failed]\n");
     serial_println!("Error: {}", info);
     exit_qemu(QemuExitCode::Failed);
-    loop {}
-}
-
-#[cfg(test)]
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    test_main();
     loop {}
 }
 

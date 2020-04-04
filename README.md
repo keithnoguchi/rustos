@@ -11,6 +11,8 @@ Philipp Oppermann's *awesome* [Writing an OS in Rust]
   - [Testing] : [post04.rs]
     - [tests/basic_boot.rs]
     - [tests/should_panic.rs]
+- Interrupts
+  - [CPU Exceptions] : [post05.rs]
 
 Happy Hackin'!
 
@@ -20,9 +22,11 @@ Happy Hackin'!
 [a minimal rust kernel]: https://os.phil-opp.com/minimal-rust-kernel/
 [vga text mode]: https://os.phil-opp.com/vga-text-mode/
 [testing]: https://os.phil-opp.com/testing/
+[cpu exceptions]: https://os.phil-opp.com/cpu-exceptions/
 [post01.rs]: examples/post01.rs
 [post02.rs]: examples/post02.rs
 [post03.rs]: examples/post03.rs
 [post04.rs]: examples/post04.rs
 [tests/basic_boot.rs]: tests/basic_boot.rs
 [tests/should_panic.rs]: tests/should_panic.rs
+[post05.rs]: examples/post05.rs
