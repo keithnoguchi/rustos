@@ -1,53 +1,7 @@
-//! Writing an [OS] in Rust: [Double Faults]
-//!
-//! [os]: https://os.phil-opp.com
-//! [double faults]: https://os.phil-opp.com/double-fault-exceptions/
-#![no_std]
-#![no_main]
-#![feature(custom_test_frameworks)]
-#![test_runner(rustos::test_runner)]
-#![reexport_test_harness_main = "test_main"]
-#![feature(abi_x86_interrupt)]
-extern crate rustos;
-use core::panic::PanicInfo;
-use rustos::println;
-
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    println!("Welcome to the real world!");
-    init();
-    #[cfg(not(test))]
-    stack_overflow();
-    #[cfg(test)]
-    test_main();
-    println!("It did not crash!!!");
-    loop {}
-}
-
-#[cfg(not(test))]
-#[allow(unconditional_recursion)]
-fn stack_overflow() {
-    stack_overflow();
-}
-
-#[cfg(not(test))]
-#[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
-    println!("{}", info);
-    loop {}
-}
-
-#[cfg(test)]
-#[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
-    rustos::test_panic_handler(info)
-}
-
-extern crate lazy_static;
-extern crate x86_64;
+use crate::println;
 use lazy_static::lazy_static;
-#[allow(unused_imports)]
 use x86_64::{
+    instructions::{segmentation::set_cs, tables::load_tss},
     structures::{
         gdt::{Descriptor, GlobalDescriptorTable, SegmentSelector},
         idt::{InterruptDescriptorTable, InterruptStackFrame},
@@ -56,9 +10,7 @@ use x86_64::{
     VirtAddr,
 };
 
-pub fn init() {
-    use x86_64::instructions::segmentation::set_cs;
-    use x86_64::instructions::tables::load_tss;
+pub(crate) fn init() {
     GDT.0.load();
     unsafe {
         set_cs(GDT.1.code_selector);
@@ -105,13 +57,14 @@ lazy_static! {
 lazy_static! {
     static ref IDT: InterruptDescriptorTable = {
         let mut idt = InterruptDescriptorTable::new();
-        unsafe {
-            idt.double_fault
-                .set_handler_fn(double_fault_handler)
-                .set_stack_index(DOUBLE_FAULT_IST_INDEX);
-        }
+        idt.breakpoint.set_handler_fn(breakpoint_handler);
+        idt.double_fault.set_handler_fn(double_fault_handler);
         idt
     };
+}
+
+extern "x86-interrupt" fn breakpoint_handler(stack_frame: &mut InterruptStackFrame) {
+    println!("EXCEPTION: BREAKPOINT\n{:#?}", stack_frame);
 }
 
 extern "x86-interrupt" fn double_fault_handler(
@@ -119,4 +72,15 @@ extern "x86-interrupt" fn double_fault_handler(
     _error_code: u64,
 ) -> ! {
     panic!("EXCEPTION: DOUBLE FAULT\n{:#?}", stack_frame);
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{serial_print, serial_println};
+    #[test_case]
+    fn breakpoint_exception() {
+        serial_print!("interrupts::breakpoint_exception... ");
+        x86_64::instructions::interrupts::int3();
+        serial_println!("[ok]");
+    }
 }

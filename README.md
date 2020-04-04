@@ -13,6 +13,9 @@ Philipp Oppermann's *awesome* [Writing an OS in Rust]
     - [tests/should_panic.rs]
 - Interrupts
   - [CPU Exceptions] : [post05.rs]
+  - [Double Faults] : [post06.rs]
+    - [tests/page_fault.rs]
+    - [tests/stack_overflow.rs]
 
 Happy Hackin'!
 
@@ -23,6 +26,7 @@ Happy Hackin'!
 [vga text mode]: https://os.phil-opp.com/vga-text-mode/
 [testing]: https://os.phil-opp.com/testing/
 [cpu exceptions]: https://os.phil-opp.com/cpu-exceptions/
+[double faults]: https://os.phil-opp.com/double-fault-exceptions/
 [post01.rs]: examples/post01.rs
 [post02.rs]: examples/post02.rs
 [post03.rs]: examples/post03.rs
@@ -30,3 +34,6 @@ Happy Hackin'!
 [tests/basic_boot.rs]: tests/basic_boot.rs
 [tests/should_panic.rs]: tests/should_panic.rs
 [post05.rs]: examples/post05.rs
+[post06.rs]: examples/post06.rs
+[tests/page_fault.rs]: tests/page_fault.rs
+[tests/stack_overflow.rs]: tests/stack_overflow.rs

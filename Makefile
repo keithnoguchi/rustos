@@ -4,6 +4,7 @@ TARGETS	+= post02 # A Minimal Rust Kernel
 TARGETS	+= post03 # VGA Text Mode
 TARGETS	+= post04 # Testing
 TARGETS	+= post05 # CPU Exceptions
+TARGETS	+= post06 # Double Faults
 
 CARGO	?= cargo
 CARGO	+= -q
