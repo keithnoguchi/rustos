@@ -7,11 +7,12 @@ TARGETS	+= post05 # CPU Exceptions
 TARGETS	+= post06 # Double Faults
 TARGETS	+= post07 # Hardware Interrupts
 TARGETS	+= post08 # Introduction Paging
+TARGETS	+= post09 # Paing Implementation
 
 CARGO	?= cargo
 CARGO	+= -q
-.PHONY: init update fmt lint image test run clean
-all: fmt lint $(TARGETS) image test
+.PHONY: init update fmt lint doc image test run clean
+all: fmt lint $(TARGETS) doc image test
 main:
 	@$(CARGO) xbuild --target x86_64-os.json
 $(TARGETS):
@@ -29,6 +30,8 @@ fmt:
 	@rustfmt --edition 2018 --check **/*.rs
 lint:
 	@$(CARGO) clippy -- -D warnings
+doc:
+	@$(CARGO) doc
 image:
 	@$(CARGO) bootimage --target x86_64-os.json
 test:

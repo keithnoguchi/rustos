@@ -4,7 +4,7 @@
 //!
 //! # Examples
 //!
-//! Example `_start()` function and the panic handler.
+//! Current `start_kernel()` function and the panic handler.
 //!
 //! ```
 //! #![no_std]
@@ -12,18 +12,36 @@
 //! #![feature(custom_test_frameworks)]
 //! #![test_runner(rustos::test_runner)]
 //! #![reexport_test_harness_main = "test_main"]
+//! extern crate bootloader;
 //! extern crate rustos;
 //! extern crate x86_64;
+//! use bootloader::{entry_point, BootInfo};
 //! use core::panic::PanicInfo;
 //! use rustos::println;
+//! use x86_64::{
+//!    structures::paging::{MapperAllSizes, Page},
+//!    VirtAddr,
+//! };
 //!
-//! #[no_mangle]
-//! pub extern "C" fn _start() -> ! {
+//! entry_point!(start_kernel);
+//!
+//! fn start_kernel(boot_info: &'static BootInfo) -> ! {
 //!     println!("Welcome to the real world!");
+//!
 //!     rustos::init();
-//!     use x86_64::registers::control::Cr3;
-//!     let (level_4_page_table, _) = Cr3::read();
-//!     println!("Level 4 page table at: {:?}", level_4_page_table);
+//!
+//!     // frame allocator.
+//!     let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+//!     let mut mapper = unsafe { rustos::memory::init(phys_mem_offset) };
+//!     let mut frame_allocator =
+//!         unsafe { rustos::memory::BootInfoFrameAllocator::init(&boot_info.memory_map) };
+//!
+//!     // write the string "New!" to the screen!
+//!     let page = Page::containing_address(VirtAddr::new(0));
+//!     create_example_mapping(page, &mut mapper, &mut frame_allocator);
+//!     let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
+//!     unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e) };
+//!
 //!     #[cfg(test)]
 //!     test_main();
 //!     println!("It did not crash!!!");
@@ -42,6 +60,28 @@
 //! fn panic(info: &PanicInfo) -> ! {
 //!     rustos::test_panic_handler(info)
 //! }
+//!
+//! use x86_64::{
+//!     structures::paging::{
+//!         FrameAllocator, Mapper, OffsetPageTable, PhysFrame, Size4KiB, UnusedPhysFrame,
+//!     },
+//!     PhysAddr,
+//! };
+//!
+//! fn create_example_mapping(
+//!     page: Page,
+//!     mapper: &mut OffsetPageTable,
+//!     frame_allocator: &mut impl FrameAllocator<Size4KiB>,
+//! {
+//!     use x86_64::structures::paging::PageTableFlags as Flags;
+//!
+//!     let frame = PhysFrame::containing_address(PhysAddr::new(0xb8000));
+//!     let unused_frame = unsafe { UnusedPhysFrame::new(frame) };
+//!     let flags = Flags::PRESENT | Flags::WRITABLE;
+//!
+//!     let map_to_result = mapper.map_to(page, unused_frame, flags, frame_allocator);
+//!     map_to_result.expect("map_to failed").flush();
+//! }
 //! ```
 #![no_std]
 #![cfg_attr(test, no_main)]
@@ -49,12 +89,14 @@
 #![test_runner(crate::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 #![feature(abi_x86_interrupt)]
+extern crate bootloader;
 extern crate lazy_static;
 extern crate spin;
 extern crate x86_64;
 
 mod gdt;
 mod interrupts;
+pub mod memory;
 pub mod serial;
 pub mod vga;
 
@@ -92,8 +134,13 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
 }
 
 #[cfg(test)]
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
+use bootloader::{entry_point, BootInfo};
+
+#[cfg(test)]
+entry_point!(start_test_kernel);
+
+#[cfg(test)]
+fn start_test_kernel(_boot_info: &'static BootInfo) -> ! {
     init();
     test_main();
     hlt_loop();
