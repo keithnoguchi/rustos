@@ -6,6 +6,7 @@ TARGETS	+= post04 # Testing
 TARGETS	+= post05 # CPU Exceptions
 TARGETS	+= post06 # Double Faults
 TARGETS	+= post07 # Hardware Interrupts
+TARGETS	+= post08 # Introduction Paging
 
 CARGO	?= cargo
 CARGO	+= -q

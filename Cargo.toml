@@ -1,6 +1,6 @@
 [package]
 name = "rustos"
-version = "0.2.2"
+version = "0.3.0"
 authors = ["Keith Noguchi <keith.noguchi@gmail.com>"]
 edition = "2018"
 keywords = ["kernel", "embedded", "no_std", "x86"]
