@@ -1,11 +1,20 @@
 [package]
 name = "rustos"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Keith Noguchi <keith.noguchi@gmail.com>"]
+edition = "2018"
+keywords = ["kernel", "embedded", "no_std", "x86"]
+license = "Apache-2.0 OR MIT"
+description = "Writing an OS in Rust"
+readme = "README.md"
+repository = "https://github.com/keithnoguchi/rustos"
+categories = ["os", "embedded", "emulators"]
 
 [dependencies]
 bootloader = "0"
 lazy_static = {version = "1", features = ["spin_no_std"]}
+pc-keyboard = "0"
+pic8259_simple = "0"
 spin = "0"
 uart_16550 = "0.2"
 volatile = "0.2"

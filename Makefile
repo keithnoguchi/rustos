@@ -1,10 +1,11 @@
-# SPDX-License-Identifier: GPL-2.0
+# SPDX-License-Identifier: Apache-2.0 OR MIT
 TARGETS	:= post01 # A Freestanding Rust Binary
 TARGETS	+= post02 # A Minimal Rust Kernel
 TARGETS	+= post03 # VGA Text Mode
 TARGETS	+= post04 # Testing
 TARGETS	+= post05 # CPU Exceptions
 TARGETS	+= post06 # Double Faults
+TARGETS	+= post07 # Hardware Interrupts
 
 CARGO	?= cargo
 CARGO	+= -q

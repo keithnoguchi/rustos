@@ -190,7 +190,7 @@ mod tests {
     }
     #[test_case]
     fn println_many() {
-        serial_print!("println_main... ");
+        serial_print!("println_many... ");
         for _ in 0..200 {
             println!("let's println a lot");
         }

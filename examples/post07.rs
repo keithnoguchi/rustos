@@ -1,19 +1,55 @@
-//! CPU exception and hardware interrupt handling
+//! Writing an [OS] in Rust: [Double Faults]
+//!
+//! [os]: https://os.phil-opp.com
+//! [double faults]: https://os.phil-opp.com/double-fault-exceptions/
+#![no_std]
+#![no_main]
+#![feature(custom_test_frameworks)]
+#![test_runner(rustos::test_runner)]
+#![reexport_test_harness_main = "test_main"]
+#![feature(abi_x86_interrupt)]
+extern crate rustos;
+extern crate x86_64;
+use core::panic::PanicInfo;
+use rustos::{print, println};
+
+#[no_mangle]
+pub extern "C" fn _start() -> ! {
+    println!("Welcome to the real world!");
+    init();
+    #[cfg(test)]
+    test_main();
+    println!("It did not crash!!!");
+    loop {
+        x86_64::instructions::hlt();
+    }
+}
+
+#[cfg(not(test))]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    println!("{}", info);
+    loop {
+        x86_64::instructions::hlt();
+    }
+}
+
+#[cfg(test)]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    rustos::test_panic_handler(info)
+}
+
+extern crate lazy_static;
 extern crate pc_keyboard;
 extern crate pic8259_simple;
-use self::{
-    pc_keyboard::{layouts, DecodedKey, HandleControl, Keyboard, ScancodeSet1},
-    pic8259_simple::ChainedPics,
-};
-use crate::{print, println};
+extern crate spin;
 use lazy_static::lazy_static;
+use pic8259_simple::ChainedPics;
 use spin::Mutex;
-use x86_64::{
-    instructions::port::Port,
-    structures::idt::{InterruptDescriptorTable, InterruptStackFrame},
-};
+use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
-pub(crate) fn init() {
+fn init() {
     IDT.load();
     // Initialize the interrupt controller.
     unsafe { PICS.lock().initialize() };
@@ -22,28 +58,16 @@ pub(crate) fn init() {
 }
 
 lazy_static! {
-    pub static ref IDT: InterruptDescriptorTable = {
+    static ref IDT: InterruptDescriptorTable = {
         let mut idt = InterruptDescriptorTable::new();
-        idt.breakpoint.set_handler_fn(breakpoint_handler);
-        idt.double_fault.set_handler_fn(double_fault_handler);
         idt[InterruptIndex::Timer.as_usize()].set_handler_fn(timer_interrupt_handler);
         idt[InterruptIndex::Keyboard.as_usize()].set_handler_fn(keyboard_interrupt_handler);
         idt
     };
 }
 
-extern "x86-interrupt" fn breakpoint_handler(stack_frame: &mut InterruptStackFrame) {
-    println!("EXCEPTION: BREAKPOINT\n{:#?}", stack_frame);
-}
-
-extern "x86-interrupt" fn double_fault_handler(
-    stack_frame: &mut InterruptStackFrame,
-    _error_code: u64,
-) -> ! {
-    panic!("EXCEPTION: DOUBLE FAULT\n{:#?}", stack_frame);
-}
-
 extern "x86-interrupt" fn timer_interrupt_handler(_stack_frame: &mut InterruptStackFrame) {
+    print!(".");
     unsafe {
         PICS.lock()
             .notify_end_of_interrupt(InterruptIndex::Timer.as_u8());
@@ -51,6 +75,9 @@ extern "x86-interrupt" fn timer_interrupt_handler(_stack_frame: &mut InterruptSt
 }
 
 extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: &mut InterruptStackFrame) {
+    use pc_keyboard::{layouts, DecodedKey, HandleControl, Keyboard, ScancodeSet1};
+    use x86_64::instructions::port::Port;
+
     lazy_static! {
         static ref KEYBOARD: Mutex<Keyboard<layouts::Us104Key, ScancodeSet1>> = Mutex::new(
             Keyboard::new(layouts::Us104Key, ScancodeSet1, HandleControl::Ignore),
@@ -66,6 +93,33 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: &mut Interrup
                 DecodedKey::RawKey(key) => print!("{:?}", key),
             }
         }
+    }
+    unsafe {
+        PICS.lock()
+            .notify_end_of_interrupt(InterruptIndex::Keyboard.as_u8());
+    }
+}
+
+#[allow(dead_code)]
+extern "x86-interrupt" fn tenkey_interrupt_handler(_stack_frame: &mut InterruptStackFrame) {
+    use x86_64::instructions::port::Port;
+    let mut port = Port::new(0x60);
+    let scancode: u8 = unsafe { port.read() };
+    let key = match scancode {
+        0x02 => Some('1'),
+        0x03 => Some('2'),
+        0x04 => Some('3'),
+        0x05 => Some('4'),
+        0x06 => Some('5'),
+        0x07 => Some('6'),
+        0x08 => Some('7'),
+        0x09 => Some('8'),
+        0x0a => Some('9'),
+        0x0b => Some('0'),
+        _ => None,
+    };
+    if let Some(key) = key {
+        print!("{}", key);
     }
     unsafe {
         PICS.lock()
@@ -94,14 +148,3 @@ const PIC_2_OFFSET: u8 = PIC_1_OFFSET + 8;
 
 static PICS: Mutex<ChainedPics> =
     Mutex::new(unsafe { ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET) });
-
-#[cfg(test)]
-mod tests {
-    use crate::{serial_print, serial_println};
-    #[test_case]
-    fn breakpoint_exception() {
-        serial_print!("interrupts::breakpoint_exception... ");
-        x86_64::instructions::interrupts::int3();
-        serial_println!("[ok]");
-    }
-}

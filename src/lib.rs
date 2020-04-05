@@ -11,22 +11,36 @@ extern crate lazy_static;
 extern crate spin;
 extern crate x86_64;
 
+mod gdt;
 mod interrupts;
 pub mod serial;
 pub mod vga;
 
 use core::panic::PanicInfo;
 
+/// Kernel initialization function.
 pub fn init() {
+    gdt::init();
     interrupts::init();
 }
 
+/// hlt instruction based kernel loop.
+pub fn hlt_loop() -> ! {
+    loop {
+        x86_64::instructions::hlt();
+    }
+}
+
+/// Qemu exit codes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum QemuExitCode {
+    /// Success code.
     Success = 0x10,
+    /// Failed code.
     Failed = 0x11,
 }
 
+/// Qemu exit function.
 pub fn exit_qemu(exit_code: QemuExitCode) {
     use x86_64::instructions::port::Port;
     unsafe {
@@ -40,9 +54,10 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
 pub extern "C" fn _start() -> ! {
     init();
     test_main();
-    loop {}
+    hlt_loop();
 }
 
+/// Unit and the integration test runner.
 pub fn test_runner(tests: &[&dyn Fn()]) {
     serial_println!("Running {} tests", tests.len());
     for test in tests {
@@ -51,11 +66,12 @@ pub fn test_runner(tests: &[&dyn Fn()]) {
     exit_qemu(QemuExitCode::Success);
 }
 
+/// Unit and the integration test panic handler.
 pub fn test_panic_handler(info: &PanicInfo) -> ! {
     serial_println!("[failed]\n");
     serial_println!("Error: {}", info);
     exit_qemu(QemuExitCode::Failed);
-    loop {}
+    hlt_loop();
 }
 
 #[cfg(test)]

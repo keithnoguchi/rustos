@@ -16,6 +16,7 @@ Philipp Oppermann's *awesome* [Writing an OS in Rust]
   - [Double Faults] : [post06.rs]
     - [tests/page_fault.rs]
     - [tests/stack_overflow.rs]
+  - [Hardware Interrupts] : [post07.rs]
 
 Happy Hackin'!
 
@@ -27,6 +28,7 @@ Happy Hackin'!
 [testing]: https://os.phil-opp.com/testing/
 [cpu exceptions]: https://os.phil-opp.com/cpu-exceptions/
 [double faults]: https://os.phil-opp.com/double-fault-exceptions/
+[hardware interrupts]: https://os.phil-opp.com/hardware-interrupts/
 [post01.rs]: examples/post01.rs
 [post02.rs]: examples/post02.rs
 [post03.rs]: examples/post03.rs
@@ -37,3 +39,4 @@ Happy Hackin'!
 [post06.rs]: examples/post06.rs
 [tests/page_fault.rs]: tests/page_fault.rs
 [tests/stack_overflow.rs]: tests/stack_overflow.rs
+[post07.rs]: examples/post07.rs
