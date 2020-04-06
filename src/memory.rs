@@ -1,5 +1,5 @@
 //! Memory mapper and the frame allocator
-use bootloader::bootinfo::{MemoryMap, MemoryRegionType};
+use bootloader::bootinfo::{BootInfo, MemoryMap, MemoryRegionType};
 use x86_64::{
     structures::paging::{
         FrameAllocator, OffsetPageTable, PageTable, PhysFrame, Size4KiB, UnusedPhysFrame,
@@ -7,13 +7,22 @@ use x86_64::{
     PhysAddr, VirtAddr,
 };
 
+/// Kernel memory manager initialization function.
+pub fn init(boot_info: &'static BootInfo) {
+    // frame allocator.
+    let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+    let mut mapper = unsafe { init_page_table(phys_mem_offset) };
+    let mut frame_allocator = unsafe { BootInfoFrameAllocator::init(&boot_info.memory_map) };
+    crate::allocator::init(&mut mapper, &mut frame_allocator).expect("allocator failed");
+}
+
 /// Initializes the page table.
 ///
 /// # Safety
 ///
 /// This function should NOT be called.  It's public just for the integration
 /// testing purpose.
-pub unsafe fn init(physical_memory_offset: VirtAddr) -> OffsetPageTable<'static> {
+pub unsafe fn init_page_table(physical_memory_offset: VirtAddr) -> OffsetPageTable<'static> {
     let level_4_table = active_level_4_table(physical_memory_offset);
     OffsetPageTable::new(level_4_table, physical_memory_offset)
 }
@@ -30,7 +39,7 @@ unsafe fn active_level_4_table(physical_memory_offset: VirtAddr) -> &'static mut
 }
 
 /// Memory frame allocator.
-pub struct BootInfoFrameAllocator {
+struct BootInfoFrameAllocator {
     memory_map: &'static MemoryMap,
     next: usize,
 }
@@ -51,7 +60,7 @@ impl BootInfoFrameAllocator {
     /// This function is unsafe because the caller must guarantee that the passed
     /// memory map is valid.  The main requirement is that all frames that are marked
     /// as `USABLE` in it are really unused.
-    pub unsafe fn init(memory_map: &'static MemoryMap) -> Self {
+    unsafe fn init(memory_map: &'static MemoryMap) -> Self {
         Self {
             memory_map,
             next: 0,

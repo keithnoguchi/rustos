@@ -22,7 +22,7 @@ fn start_kernel(boot_info: &'static BootInfo) -> ! {
 
     // Initialize the kernel.
     rustos::init();
-    rustos::init_memory(boot_info);
+    rustos::memory::init(boot_info);
 
     // Let's box it on heap!
     let x = Box::new(41);

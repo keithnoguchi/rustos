@@ -28,7 +28,7 @@
 //!
 //!     // Initialize the kernel.
 //!     rustos::init();
-//!     rustos::init_memory(boot_info);
+//!     rustos::memory::init(boot_info);
 //!
 //!     // Let's box it on heap!
 //!     let x = Box::new(41);
@@ -47,6 +47,14 @@
 //!     println!("current reference count is {}", Rc::strong_count(&cloned));
 //!     core::mem::drop(reference);
 //!     println!("reference count is {} now", Rc::strong_count(&cloned));
+//!
+//!     // Long lived many boxes allocation!
+//!     let long_lived = Box::new(1);
+//!     for i in 0..rustos::HEAP_SIZE {
+//!         let x = Box::new(i);
+//!         assert_eq!(*x, i);
+//!     }
+//!     assert_eq!(*long_lived, 1);
 //!
 //!     #[cfg(test)]
 //!     test_main();
@@ -69,11 +77,14 @@
 //! ```
 #![no_std]
 #![cfg_attr(test, no_main)]
+#![feature(alloc_error_handler)]
+#![feature(alloc_layout_extra)]
+#![feature(const_fn)]
+#![feature(const_in_array_repeat_expressions)]
 #![feature(custom_test_frameworks)]
+#![feature(abi_x86_interrupt)]
 #![test_runner(crate::test_runner)]
 #![reexport_test_harness_main = "test_main"]
-#![feature(abi_x86_interrupt)]
-#![feature(alloc_error_handler)]
 extern crate bootloader;
 extern crate lazy_static;
 extern crate spin;
@@ -86,9 +97,7 @@ pub mod memory;
 pub mod serial;
 pub mod vga;
 
-use bootloader::BootInfo;
 use core::panic::PanicInfo;
-use x86_64::VirtAddr;
 
 // re-exports.
 pub use allocator::HEAP_SIZE;
@@ -98,16 +107,6 @@ pub use allocator::HEAP_START;
 pub fn init() {
     gdt::init();
     interrupts::init();
-}
-
-/// Kernel memory manager initialization function.
-pub fn init_memory(boot_info: &'static BootInfo) {
-    // frame allocator.
-    let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
-    let mut mapper = unsafe { memory::init(phys_mem_offset) };
-    let mut frame_allocator =
-        unsafe { memory::BootInfoFrameAllocator::init(&boot_info.memory_map) };
-    allocator::init(&mut mapper, &mut frame_allocator).expect("allocator failed");
 }
 
 /// hlt instruction based kernel loop.
@@ -136,7 +135,7 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
 }
 
 #[cfg(test)]
-use bootloader::entry_point;
+use bootloader::{entry_point, BootInfo};
 
 #[cfg(test)]
 entry_point!(test_kernel);
@@ -144,7 +143,7 @@ entry_point!(test_kernel);
 #[cfg(test)]
 fn test_kernel(boot_info: &'static BootInfo) -> ! {
     init();
-    init_memory(boot_info);
+    memory::init(boot_info);
     test_main();
     hlt_loop();
 }

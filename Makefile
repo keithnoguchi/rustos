@@ -9,6 +9,7 @@ TARGETS	+= post07 # Hardware Interrupts
 TARGETS	+= post08 # Introduction Paging
 TARGETS	+= post09 # Paing Implementation
 TARGETS	+= post10 # Heap Allocation
+TARGETS	+= post11 # Allocator Designs
 
 CARGO	?= cargo
 CARGO	+= -q

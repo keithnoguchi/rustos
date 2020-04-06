@@ -16,7 +16,7 @@ entry_point!(test_kernel);
 fn test_kernel(boot_info: &'static BootInfo) -> ! {
     serial_print!("tests::page_table::test_kernel... ");
     let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
-    let mapper = unsafe { rustos::memory::init(phys_mem_offset) };
+    let mapper = unsafe { rustos::memory::init_page_table(phys_mem_offset) };
     let addresses = [
         // the identity-mapped vga buffer page.
         0xb8000,

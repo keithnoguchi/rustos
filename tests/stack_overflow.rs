@@ -11,7 +11,7 @@ use core::panic::PanicInfo;
 use rustos::{exit_qemu, serial_print, serial_println, QemuExitCode};
 
 #[no_mangle]
-pub extern "C" fn _start() {
+pub extern "C" fn _start() -> ! {
     rustos::init();
     test_main();
     loop {}

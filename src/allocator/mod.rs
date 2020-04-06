@@ -1,8 +1,11 @@
-//! Heap allocator
+//! Heap allocators
 extern crate alloc;
 extern crate linked_list_allocator;
-use self::alloc::alloc::Layout;
-use self::linked_list_allocator::LockedHeap;
+
+use alloc::alloc::Layout;
+#[allow(unused_imports)]
+use linked_list_allocator::LockedHeap;
+use spin::{Mutex, MutexGuard};
 use x86_64::{
     structures::paging::{
         mapper::MapToError, FrameAllocator, Mapper, Page, PageTableFlags, Size4KiB,
@@ -10,10 +13,39 @@ use x86_64::{
     VirtAddr,
 };
 
-/// Heap start address.
+/// Kernel heap start address.
 pub const HEAP_START: usize = 0x_4444_4444_0000;
-/// Heap size.
+/// Kernel heap size.
 pub const HEAP_SIZE: usize = 100 * 1024; // 100KiB
+
+struct Locked<A> {
+    inner: Mutex<A>,
+}
+
+impl<A> Locked<A> {
+    #[allow(dead_code)]
+    const fn new(inner: A) -> Self {
+        Self {
+            inner: Mutex::new(inner),
+        }
+    }
+    fn lock(&self) -> MutexGuard<A> {
+        self.inner.lock()
+    }
+}
+
+/// Different allocator designs.
+mod block;
+mod bump;
+mod list;
+
+#[global_allocator]
+static ALLOCATOR: Locked<block::Allocator> = Locked::new(block::Allocator::new());
+
+#[alloc_error_handler]
+fn alloc_error_handler(layout: Layout) -> ! {
+    panic!("allocation error: {:?}", layout);
+}
 
 pub(crate) fn init(
     mapper: &mut impl Mapper<Size4KiB>,
@@ -39,10 +71,6 @@ pub(crate) fn init(
     Ok(())
 }
 
-#[global_allocator]
-static ALLOCATOR: LockedHeap = LockedHeap::empty();
-
-#[alloc_error_handler]
-fn alloc_error_handler(layout: Layout) -> ! {
-    panic!("allocation error: {:?}", layout);
+fn align_up(addr: usize, align: usize) -> usize {
+    (addr + align - 1) & !(align - 1)
 }

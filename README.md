@@ -24,6 +24,7 @@ Philipp Oppermann's *awesome* [Writing an OS in Rust]
   - [Paging Implementation] : [post09.rs](examples/post09.rs)
   - [Heap Allocation] : [post10.rs](examples/post10.rs)
     - [tests/heap_allocation.rs](tests/heap_allocation.rs)
+  - [Allocator Designs] : [post11.rs](examples/post11.rs)
 
 ## main.rs
 
@@ -51,7 +52,7 @@ fn start_kernel(boot_info: &'static BootInfo) -> ! {
 
     // Initialize the kernel.
     rustos::init();
-    rustos::init_memory(boot_info);
+    rustos::memory::init(boot_info);
 
     // Let's box it on heap!
     let x = Box::new(41);
@@ -70,6 +71,14 @@ fn start_kernel(boot_info: &'static BootInfo) -> ! {
     println!("current reference count is {}", Rc::strong_count(&cloned));
     core::mem::drop(reference);
     println!("reference count is {} now", Rc::strong_count(&cloned));
+
+    // Long lived many boxes allocation!
+    let long_lived = Box::new(1);
+    for i in 0..rustos::HEAP_SIZE {
+        let x = Box::new(i);
+        assert_eq!(*x, i);
+    }
+    assert_eq!(*long_lived, 1);
 
     #[cfg(test)]
     test_main();
@@ -135,3 +144,4 @@ Happy Hackin'!
 [introduction to paging]: https://os.phil-opp.com/paging-introduction/
 [paging implementation]: https://os.phil-opp.com/paging-implementation/
 [heap allocation]: https://os.phil-opp.com/heap-allocation/
+[allocator designs]: https://os.phil-opp.com/allocator-designs/
