@@ -7,25 +7,27 @@
 Philipp Oppermann's *awesome* [Writing an OS in Rust]
 
 - Bare bones
-  - [A Freestanding Rust Binary] : [post01.rs]
-  - [A Minimal Rust Kernel] : [post02.rs]
-  - [VGA Text Mode] : [post03.rs]
-  - [Testing] : [post04.rs]
-    - [tests/basic_boot.rs]
-    - [tests/should_panic.rs]
+  - [A Freestanding Rust Binary] : [post01.rs](examples/post01.rs)
+  - [A Minimal Rust Kernel] : [post02.rs](examples/post02.rs)
+  - [VGA Text Mode] : [post03.rs](examples/post03.rs)
+  - [Testing] : [post04.rs](examples/post04.rs)
+    - [tests/basic_boot.rs](tests/basic_boot.rs)
+    - [tests/should_panic.rs](tests/should_panic.rs)
 - Interrupts
-  - [CPU Exceptions] : [post05.rs]
-  - [Double Faults] : [post06.rs]
-    - [tests/page_fault.rs]
-    - [tests/stack_overflow.rs]
-  - [Hardware Interrupts] : [post07.rs]
+  - [CPU Exceptions] : [post05.rs](examples/post05.rs)
+  - [Double Faults] : [post06.rs](examples/post06.rs)
+    - [tests/page_fault.rs](tests/page_fault.rs)
+    - [tests/stack_overflow.rs](tests/stack_overflow.rs)
+  - [Hardware Interrupts] : [post07.rs](examples/post07.rs)
 - Memroy Management
-  - [Introduction to Paging] : [post08.rs]
-  - [Paging Implementation] : [post09.rs]
+  - [Introduction to Paging] : [post08.rs](examples/post08.rs)
+  - [Paging Implementation] : [post09.rs](examples/post09.rs)
+  - [Heap Allocation] : [post10.rs](examples/post10.rs)
+    - [tests/heap_allocation.rs](tests/heap_allocation.rs)
 
-## Examples
+## main.rs
 
-Current [main.rs]:
+Current [main.rs](src/main.rs):
 
 ```rust
 #![no_std]
@@ -33,52 +35,41 @@ Current [main.rs]:
 #![feature(custom_test_frameworks)]
 #![test_runner(rustos::test_runner)]
 #![reexport_test_harness_main = "test_main"]
+extern crate alloc;
 extern crate bootloader;
 extern crate rustos;
 extern crate x86_64;
+use alloc::{boxed::Box, rc::Rc, vec, vec::Vec};
 use bootloader::{entry_point, BootInfo};
 use core::panic::PanicInfo;
 use rustos::println;
-use x86_64::{
-    structures::paging::{MapperAllSizes, Page},
-    VirtAddr,
-};
 
 entry_point!(start_kernel);
 
 fn start_kernel(boot_info: &'static BootInfo) -> ! {
     println!("Welcome to the real world!");
 
+    // Initialize the kernel.
     rustos::init();
+    rustos::init_memory(boot_info);
 
-    // frame allocator.
-    let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
-    let mut mapper = unsafe { rustos::memory::init(phys_mem_offset) };
-    let mut frame_allocator =
-        unsafe { rustos::memory::BootInfoFrameAllocator::init(&boot_info.memory_map) };
+    // Let's box it on heap!
+    let x = Box::new(41);
+    println!("x={:p}", x);
 
-    // dump the virtual to physical mapping.
-    let addresses = [
-        // the identity-mapped vga buffer page.
-        0xb8000,
-        // some code page.
-        0x0020_1008,
-        // some stack page.
-        0x0100_0020_1a10,
-        // virtual address mapped to physical address 0.
-        boot_info.physical_memory_offset,
-    ];
-    for &address in &addresses {
-        let virt = VirtAddr::new(address);
-        let phys = mapper.translate_addr(virt);
-        println!("{:?} -> {:?}", virt, phys);
+    // and then vector!
+    let mut vec = Vec::new();
+    for i in 0..500 {
+        vec.push(i);
     }
+    println!("vec at {:p}", vec.as_slice());
 
-    // write the string "New!" to the screen!
-    let page = Page::containing_address(VirtAddr::new(0));
-    create_example_mapping(page, &mut mapper, &mut frame_allocator);
-    let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
-    unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e) };
+    // now, a reference counted vector.
+    let reference = Rc::new(vec![1, 2, 3]);
+    let cloned = Rc::clone(&reference);
+    println!("current reference count is {}", Rc::strong_count(&cloned));
+    core::mem::drop(reference);
+    println!("reference count is {} now", Rc::strong_count(&cloned));
 
     #[cfg(test)]
     test_main();
@@ -98,28 +89,34 @@ fn panic(info: &PanicInfo) -> ! {
 fn panic(info: &PanicInfo) -> ! {
     rustos::test_panic_handler(info)
 }
+```
 
-use x86_64::{
-    structures::paging::{
-        FrameAllocator, Mapper, OffsetPageTable, PhysFrame, Size4KiB, UnusedPhysFrame,
-    },
-    PhysAddr,
-};
+## Execution
 
-fn create_example_mapping(
-    page: Page,
-    mapper: &mut OffsetPageTable,
-    frame_allocator: &mut impl FrameAllocator<Size4KiB>,
-) {
-    use x86_64::structures::paging::PageTableFlags as Flags;
+You can run the current [main.rs] with `make run`:
 
-    let frame = PhysFrame::containing_address(PhysAddr::new(0xb8000));
-    let unused_frame = unsafe { UnusedPhysFrame::new(frame) };
-    let flags = Flags::PRESENT | Flags::WRITABLE;
+```sh
+make run
+```
 
-    let map_to_result = mapper.map_to(page, unused_frame, flags, frame_allocator);
-    map_to_result.expect("map_to failed").flush();
-}
+or the previous posts, e.g. [post01.rs] with `make run-post_name` as:
+
+```sh
+make run-post01
+```
+
+## Tests
+
+You can run all the integration test with `make test`:
+
+```sh
+make test
+```
+
+or specific tests with `make tsst-test_name as:
+
+```sh
+make test-heap_allocation
 ```
 
 Happy Hackin'!
@@ -137,17 +134,4 @@ Happy Hackin'!
 [hardware interrupts]: https://os.phil-opp.com/hardware-interrupts/
 [introduction to paging]: https://os.phil-opp.com/paging-introduction/
 [paging implementation]: https://os.phil-opp.com/paging-implementation/
-[main.rs]: src/main.rs
-[post01.rs]: examples/post01.rs
-[post02.rs]: examples/post02.rs
-[post03.rs]: examples/post03.rs
-[post04.rs]: examples/post04.rs
-[tests/basic_boot.rs]: tests/basic_boot.rs
-[tests/should_panic.rs]: tests/should_panic.rs
-[post05.rs]: examples/post05.rs
-[post06.rs]: examples/post06.rs
-[tests/page_fault.rs]: tests/page_fault.rs
-[tests/stack_overflow.rs]: tests/stack_overflow.rs
-[post07.rs]: examples/post07.rs
-[post08.rs]: examples/post08.rs
-[post09.rs]: examples/post09.rs
+[heap allocation]: https://os.phil-opp.com/heap-allocation/

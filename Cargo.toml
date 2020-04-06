@@ -1,6 +1,6 @@
 [package]
 name = "rustos"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Keith Noguchi <keith.noguchi@gmail.com>"]
 edition = "2018"
 keywords = ["kernel", "embedded", "no_std", "x86"]
@@ -13,6 +13,7 @@ categories = ["os", "embedded", "emulators"]
 [dependencies]
 bootloader = {version = "0", features = ["map_physical_memory"]}
 lazy_static = {version = "1", features = ["spin_no_std"]}
+linked_list_allocator = "0"
 pc-keyboard = "0"
 pic8259_simple = "0"
 spin = "0"

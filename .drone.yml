@@ -5,7 +5,7 @@ steps:
   - name: format
     image: archlinux/base
     commands:
-      - pacman -Sy --noconfirm make gcc pkgconf rustup flatbuffers wabt
+      - pacman -Sy --noconfirm make gcc pkgconf rustup
       - rustup update nightly
       - rustup default nightly
       - rustup component add rustfmt
@@ -13,7 +13,7 @@ steps:
   - name: lint
     image: archlinux/base
     commands:
-      - pacman -Sy --noconfirm make gcc pkgconf rustup flatbuffers protobuf wabt grep
+      - pacman -Sy --noconfirm make gcc pkgconf rustup grep
       - rustup update nightly
       - rustup default nightly
       - rustup component add clippy
@@ -21,14 +21,14 @@ steps:
   - name: documentation
     image: archlinux/base
     commands:
-      - pacman -Sy --noconfirm make gcc pkgconf rustup flatbuffers protobuf wabt grep
+      - pacman -Sy --noconfirm make gcc pkgconf rustup grep
       - rustup update nightly
       - rustup default nightly
       - cargo doc
   - name: build
     image: archlinux/base
     commands:
-      - pacman -Sy --noconfirm make gcc pkgconf rustup flatbuffers protobuf wabt grep
+      - pacman -Sy --noconfirm make gcc pkgconf rustup grep
       - rustup update nightly
       - rustup default nightly
       - cargo install cargo-xbuild
@@ -41,7 +41,7 @@ steps:
   - name: image
     image: archlinux/base
     commands:
-      - pacman -Sy --noconfirm make gcc pkgconf rustup flatbuffers protobuf wabt grep
+      - pacman -Sy --noconfirm make gcc pkgconf rustup grep
       - rustup update nightly
       - rustup default nightly
       - cargo install cargo-xbuild
@@ -54,7 +54,7 @@ steps:
   - name: test
     image: archlinux/base
     commands:
-      - pacman -Sy --noconfirm make gcc pkgconf rustup flatbuffers protobuf wabt grep qemu-headless
+      - pacman -Sy --noconfirm make gcc pkgconf rustup grep qemu-headless
       - rustup update nightly
       - rustup default nightly
       - cargo install cargo-xbuild

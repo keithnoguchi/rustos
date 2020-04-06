@@ -8,6 +8,7 @@ TARGETS	+= post06 # Double Faults
 TARGETS	+= post07 # Hardware Interrupts
 TARGETS	+= post08 # Introduction Paging
 TARGETS	+= post09 # Paing Implementation
+TARGETS	+= post10 # Heap Allocation
 
 CARGO	?= cargo
 CARGO	+= -q
@@ -36,6 +37,8 @@ image:
 	@$(CARGO) bootimage --target x86_64-os.json
 test:
 	@$(CARGO) xtest --target x86_64-os.json
+test-%:
+	@$(CARGO) xtest --target x86_64-os.json --test $*
 run:
 	@$(CARGO) xrun --target x86_64-os.json
 run-%:
