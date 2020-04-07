@@ -23,7 +23,9 @@ impl Default for Executor {
 impl Executor {
     /// Create new executor.
     pub fn new() -> Self {
-        Self::default()
+        let mut executor = Self::default();
+        executor.spawn(super::Task::new(super::keyboard::print_keypress()));
+        executor
     }
     /// Spawn a new task.
     pub fn spawn(&mut self, task: Task) {

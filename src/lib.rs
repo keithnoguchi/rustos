@@ -28,14 +28,16 @@
 //!     rustos::init();
 //!     rustos::memory::init(boot_info);
 //!
-//!     // Run async tasks.
+//!     // Spawn async task(s).
 //!     let mut executor = task::Executor::new();
 //!     executor.spawn(task::Task::new(example_task()));
-//!     executor.run();
 //!
 //!     #[cfg(test)]
 //!     test_main();
 //!     println!("It did not crash!!!");
+//!
+//!     // This won't return now because of the keyboard task.
+//!     executor.run();
 //!     rustos::hlt_loop()
 //! }
 //!

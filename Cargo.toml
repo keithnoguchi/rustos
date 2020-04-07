@@ -1,6 +1,6 @@
 [package]
 name = "rustos"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["Keith Noguchi <keith.noguchi@gmail.com>"]
 edition = "2018"
 keywords = ["kernel", "embedded", "no_std", "x86"]
@@ -12,6 +12,9 @@ categories = ["os", "embedded", "emulators"]
 
 [dependencies]
 bootloader = {version = "0", features = ["map_physical_memory"]}
+conquer-once = {version = "0", default-features = false}
+crossbeam-queue = {version = "0", default-features = false, features = ["alloc"]}
+futures-util = {version = "0", default-features = false, features = ["alloc"]}
 lazy_static = {version = "1", features = ["spin_no_std"]}
 linked_list_allocator = "0"
 pc-keyboard = "0"

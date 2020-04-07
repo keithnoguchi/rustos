@@ -7,6 +7,7 @@ use core::{
     task::{Context, Poll},
 };
 
+pub(crate) mod keyboard;
 mod simple;
 
 /// Re-exports.
