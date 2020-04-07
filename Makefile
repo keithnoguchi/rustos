@@ -10,6 +10,7 @@ TARGETS	+= post08 # Introduction Paging
 TARGETS	+= post09 # Paing Implementation
 TARGETS	+= post10 # Heap Allocation
 TARGETS	+= post11 # Allocator Designs
+TARGETS	+= post12 # Async/Await
 
 CARGO	?= cargo
 CARGO	+= -q

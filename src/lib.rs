@@ -4,7 +4,8 @@
 //!
 //! # Examples
 //!
-//! Here is the current entry point, `start_kernel()`, and the panic handler.
+//! Here is the current entry point, `start_kernel()`, and panic handlers,
+//! and async task.
 //!
 //! ```
 //! #![no_std]
@@ -12,14 +13,11 @@
 //! #![feature(custom_test_frameworks)]
 //! #![test_runner(rustos::test_runner)]
 //! #![reexport_test_harness_main = "test_main"]
-//! extern crate alloc;
 //! extern crate bootloader;
 //! extern crate rustos;
-//! extern crate x86_64;
-//! use alloc::{boxed::Box, rc::Rc, vec, vec::Vec};
 //! use bootloader::{entry_point, BootInfo};
 //! use core::panic::PanicInfo;
-//! use rustos::println;
+//! use rustos::{println, task};
 //!
 //! entry_point!(start_kernel);
 //!
@@ -30,36 +28,15 @@
 //!     rustos::init();
 //!     rustos::memory::init(boot_info);
 //!
-//!     // Let's box it on heap!
-//!     let x = Box::new(41);
-//!     println!("x={:p}", x);
-//!
-//!     // and then vector!
-//!     let mut vec = Vec::new();
-//!     for i in 0..500 {
-//!         vec.push(i);
-//!     }
-//!     println!("vec at {:p}", vec.as_slice());
-//!
-//!     // now, a reference counted vector.
-//!     let reference = Rc::new(vec![1, 2, 3]);
-//!     let cloned = Rc::clone(&reference);
-//!     println!("current reference count is {}", Rc::strong_count(&cloned));
-//!     core::mem::drop(reference);
-//!     println!("reference count is {} now", Rc::strong_count(&cloned));
-//!
-//!     // Long lived many boxes allocation!
-//!     let long_lived = Box::new(1);
-//!     for i in 0..rustos::HEAP_SIZE {
-//!         let x = Box::new(i);
-//!         assert_eq!(*x, i);
-//!     }
-//!     assert_eq!(*long_lived, 1);
+//!     // Run async tasks.
+//!     let mut executor = task::Executor::new();
+//!     executor.spawn(task::Task::new(example_task()));
+//!     executor.run();
 //!
 //!     #[cfg(test)]
 //!     test_main();
 //!     println!("It did not crash!!!");
-//!     rustos::hlt_loop();
+//!     rustos::hlt_loop()
 //! }
 //!
 //! #[cfg(not(test))]
@@ -73,6 +50,15 @@
 //! #[panic_handler]
 //! fn panic(info: &PanicInfo) -> ! {
 //!     rustos::test_panic_handler(info)
+//! }
+//!
+//! async fn example_task() {
+//!     let number = async_number().await;
+//!     println!("async number: {}", number);
+//! }
+//!
+//! async fn async_number() -> u32 {
+//!     42
 //! }
 //! ```
 #![no_std]
@@ -95,6 +81,7 @@ mod gdt;
 mod interrupts;
 pub mod memory;
 pub mod serial;
+pub mod task;
 pub mod vga;
 
 use core::panic::PanicInfo;
