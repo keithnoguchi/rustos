@@ -1,10 +1,6 @@
 //! Heap allocators
 extern crate alloc;
-extern crate linked_list_allocator;
-
 use alloc::alloc::Layout;
-#[allow(unused_imports)]
-use linked_list_allocator::LockedHeap;
 use spin::{Mutex, MutexGuard};
 use x86_64::{
     structures::paging::{
@@ -23,7 +19,6 @@ struct Locked<A> {
 }
 
 impl<A> Locked<A> {
-    #[allow(dead_code)]
     const fn new(inner: A) -> Self {
         Self {
             inner: Mutex::new(inner),

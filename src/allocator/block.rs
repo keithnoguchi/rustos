@@ -1,7 +1,7 @@
 //! Fixed-size [Block] Allocator
 //!
 //! [block]: https://os.phil-opp.com/allocator-designs/#fixed-size-block-allocator
-#![allow(dead_code)]
+extern crate linked_list_allocator;
 use super::alloc::alloc::{GlobalAlloc, Layout};
 use core::{
     mem,

@@ -1,7 +1,6 @@
 //! Async [keyboard] task
 //!
 //! [keyboard]:  https://os.phil-opp.com/async-await/#async-keyboard-input
-#![allow(dead_code)]
 use crate::{print, println};
 use conquer_once::spin::OnceCell;
 use core::{
