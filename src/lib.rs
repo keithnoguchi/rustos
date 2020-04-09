@@ -36,9 +36,8 @@
 //!     test_main();
 //!     println!("It did not crash!!!");
 //!
-//!     // This won't return now because of the keyboard task.
-//!     executor.run();
-//!     rustos::hlt_loop()
+//!     // Run forever.
+//!     executor.run()
 //! }
 //!
 //! #[cfg(not(test))]
@@ -71,6 +70,7 @@
 #![feature(const_in_array_repeat_expressions)]
 #![feature(custom_test_frameworks)]
 #![feature(abi_x86_interrupt)]
+#![feature(wake_trait)]
 #![test_runner(crate::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 extern crate bootloader;

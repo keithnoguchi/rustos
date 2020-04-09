@@ -61,9 +61,8 @@ fn start_kernel(boot_info: &'static BootInfo) -> ! {
     test_main();
     println!("It did not crash!!!");
 
-    // This won't return now because of the keyboard task.
-    executor.run();
-    rustos::hlt_loop()
+    // Run forever.
+    executor.run()
 }
 
 #[cfg(not(test))]

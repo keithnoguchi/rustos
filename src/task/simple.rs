@@ -22,16 +22,19 @@ impl Default for Executor {
 
 impl Executor {
     /// Create new executor.
+    #[allow(dead_code)]
     pub fn new() -> Self {
         let mut executor = Self::default();
         executor.spawn(super::Task::new(super::keyboard::print_keypress()));
         executor
     }
     /// Spawn a new task.
+    #[allow(dead_code)]
     pub fn spawn(&mut self, task: Task) {
         self.task_queue.push_back(task)
     }
     /// Run the executor.
+    #[allow(dead_code)]
     pub fn run(&mut self) {
         while let Some(mut task) = self.task_queue.pop_front() {
             let waker = dummy_waker();
